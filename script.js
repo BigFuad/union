@@ -2,12 +2,16 @@ const upload = document.getElementById('upload');
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const downloadBtn = document.getElementById('downloadBtn');
+const borderSlider = document.getElementById('borderSize');
+const toggleBgBtn = document.getElementById('toggleBg');
+const toggleShapeBtn = document.getElementById('toggleShape');
 
-// Load the logo
 const logo = new Image();
-logo.src = 'logo.jpeg'; // Ensure this file is in the same folder as index.html
+logo.src = 'logo.jpeg';
 
 let uploadedImg = null;
+let borderSize = parseInt(borderSlider.value);
+let shape = 'square'; // or 'circle'
 
 upload.addEventListener('change', function () {
   const file = upload.files[0];
@@ -16,60 +20,84 @@ upload.addEventListener('change', function () {
   const reader = new FileReader();
   reader.onload = function (event) {
     uploadedImg = new Image();
-    uploadedImg.onload = drawEverything;
+    uploadedImg.onload = () => drawImageWithBorder();
     uploadedImg.src = event.target.result;
   };
   reader.readAsDataURL(file);
 });
 
-function drawEverything() {
-  canvas.width = uploadedImg.width;
-  canvas.height = uploadedImg.height;
+borderSlider.addEventListener('input', function () {
+  borderSize = parseInt(borderSlider.value);
+  if (uploadedImg) drawImageWithBorder();
+});
 
-  // Draw the original image in color
-  ctx.drawImage(uploadedImg, 0, 0);
+toggleBgBtn.addEventListener('click', function () {
+  document.body.classList.toggle('static-bg');
+});
 
-  // Wait until logo is fully loaded
+toggleShapeBtn.addEventListener('click', function () {
+  shape = shape === 'square' ? 'circle' : 'square';
+  if (uploadedImg) drawImageWithBorder();
+});
+
+function drawImageWithBorder() {
+  const logoSize = borderSize * 0.75;
+  const totalSize = borderSize * 2;
+
+  canvas.width = uploadedImg.width + totalSize;
+  canvas.height = uploadedImg.height + totalSize;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  ctx.drawImage(uploadedImg, borderSize, borderSize);
+
   if (!logo.complete) {
-    logo.onload = drawOverlay;
+    logo.onload = () => drawLogoBorder(logoSize);
   } else {
-    drawOverlay();
+    drawLogoBorder(logoSize);
   }
 }
 
-function drawOverlay() {
-  const tagHeight = canvas.height * 0.1;
-  const padding = 20;
+function drawLogoBorder(size) {
+  if (shape === 'square') {
+    drawSquareBorder(size);
+  } else {
+    drawCircleBorder(size);
+  }
+}
 
-  // Resize logo
-  const logoHeight = tagHeight * 0.8;
-  const logoWidth = logo.width * (logoHeight / logo.height);
+function drawSquareBorder(size) {
+  const cols = Math.floor((canvas.width - size) / size);
+  const rows = Math.floor((canvas.height - size) / size);
 
-  const text = "UNION ARMY";
-  ctx.font = `${Math.floor(tagHeight * 0.6)}px Impact`;
-  ctx.fillStyle = 'white';
-  ctx.strokeStyle = 'black';
-  ctx.lineWidth = 4;
+  for (let x = 0; x < cols; x++) {
+    ctx.drawImage(logo, x * size, 0, size, size); // top
+    ctx.drawImage(logo, x * size, canvas.height - size, size, size); // bottom
+  }
+  for (let y = 0; y < rows; y++) {
+    ctx.drawImage(logo, 0, y * size, size, size); // left
+    ctx.drawImage(logo, canvas.width - size, y * size, size, size); // right
+  }
+}
 
-  const textWidth = ctx.measureText(text).width;
+function drawCircleBorder(size) {
+  const centerX = canvas.width / 2;
+  const centerY = canvas.height / 2;
+  const radius = Math.min(canvas.width, canvas.height) / 2 - size;
 
-  const totalWidth = logoWidth + 10 + textWidth;
-  const xStart = (canvas.width - totalWidth) / 2;
-  const yBottom = canvas.height - padding;
+  const count = 40; // how many logos around the circle
 
-  // Draw logo
-  ctx.drawImage(logo, xStart, yBottom - logoHeight, logoWidth, logoHeight);
-
-  // Draw text beside logo
-  const textX = xStart + logoWidth + 10;
-  const textY = yBottom - logoHeight / 2 + 10;
-  ctx.strokeText(text, textX, textY);
-  ctx.fillText(text, textX, textY);
+  for (let i = 0; i < count; i++) {
+    const angle = (i / count) * Math.PI * 2;
+    const x = centerX + radius * Math.cos(angle) - size / 2;
+    const y = centerY + radius * Math.sin(angle) - size / 2;
+    ctx.drawImage(logo, x, y, size, size);
+  }
 }
 
 downloadBtn.addEventListener('click', function () {
   const link = document.createElement('a');
-  link.download = 'union-army-profile.png';
+  link.download = 'union-bordered-image.png';
   link.href = canvas.toDataURL();
   link.click();
 });
