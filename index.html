@@ -3,16 +3,30 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Union Army Profile Generator</title>
-  <link rel="stylesheet" href="style.css"/>
+  <title>Union Border Generator</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <div class="background-text">UNION</div>
+
   <div class="container">
-    <h1>Union Army Profile Picture Generator</h1>
+    <h1>Union Army Border Generator</h1>
+    
     <input type="file" id="upload" accept="image/*" />
+    
+    <div class="controls">
+      <label for="borderSize">Border Thickness:</label>
+      <input type="range" id="borderSize" min="10" max="100" value="40" />
+      
+      <button id="toggleBg">Toggle Background</button>
+      <button id="toggleShape">Toggle Border Shape (Square/Circle)</button>
+    </div>
+
     <canvas id="canvas"></canvas>
-    <button id="downloadBtn">Download Image</button>
+    
+    <button id="downloadBtn">Download</button>
   </div>
+
   <script src="script.js"></script>
 </body>
 </html>
